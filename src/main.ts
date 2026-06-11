@@ -16,6 +16,7 @@ async function bootstrap() {
     }),
   );
 
+  // O seu CORS unificado com a Vercel está mantido aqui perfeitamente
   app.enableCors({
     origin: [
       'https://paineladm-navy.vercel.app',
@@ -33,38 +34,6 @@ async function bootstrap() {
     ],
     credentials: true,
   });
-
-  // RESOLVIDO: Puxando a conexão correta e já configurada do próprio NestJS
-  try {
-    // Procuramos o PrismaService dinamicamente dentro dos módulos injetados
-    const prisma = app.get('PrismaService' as any) || app.get('PrismaClient' as any);
-    
-    if (prisma && prisma.user) {
-      const adminExists = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { tipo: 'ADMIN' },
-            { role: 'ADMIN' }
-          ]
-        } as any
-      });
-
-      if (!adminExists) {
-        await prisma.user.create({
-          data: {
-            id: 1,
-            email: 'admin@teste.com',
-            password: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C', // Senha '123456'
-            tipo: 'ADMIN',
-            planoUser: 'ADMIN',
-          } as any
-        });
-        console.log('USUÁRIO ADMIN CRIADO COM SUCESSO NO BANCO!');
-      }
-    }
-  } catch (e: any) {
-    console.log('Aviso: Pulando criação automática de admin:', e.message);
-  }
 
   await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
 }
