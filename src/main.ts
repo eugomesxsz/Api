@@ -17,10 +17,9 @@ async function bootstrap() {
     }),
   );
 
-  // Configuração unificada do CORS do arquivo original + o link da sua Vercel
   app.enableCors({
     origin: [
-      'https://paineladm-navy.vercel.app', // O seu painel da Vercel adicionado aqui
+      'https://paineladm-navy.vercel.app',
       'http://localhost:8081',
       'http://172.17.240.1:8081',
       'http://localhost:3000',
@@ -36,7 +35,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Script para criar o Admin usando os campos em inglês ('password' e 'role')
   const prisma = new PrismaClient();
   try {
     const adminExists = await prisma.user.findFirst({
@@ -53,7 +51,7 @@ async function bootstrap() {
         data: {
           id: 1,
           email: 'admin@teste.com',
-          password: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C', // Senha '123456' em Bcrypt
+          password: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C',
           tipo: 'ADMIN',
           planoUser: 'ADMIN',
         } as any
@@ -63,7 +61,6 @@ async function bootstrap() {
   } catch (e) {
     console.log('Tentando formato alternativo de campos...');
     try {
-      // Segunda tentativa caso os campos do Edgar sejam estritamente em inglês
       await prisma.user.create({
         data: {
           id: 1,
@@ -74,7 +71,7 @@ async function bootstrap() {
         } as any
       });
       console.log('USUÁRIO ADMIN CRIADO COM SUCESSO (CAMPOS EM INGLÊS)!');
-    } catch (err) {
+    } catch (err: any) { // CORRIGIDO: Adicionado o ': any' aqui para sumir o erro TS18046
       console.log('Aviso: Não foi possível criar o admin automaticamente:', err.message);
     }
   }
