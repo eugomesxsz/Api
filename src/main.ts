@@ -1,7 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { PrismaClient } from '@prisma/client';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -35,45 +34,36 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const prisma = new PrismaClient();
+  // RESOLVIDO: Puxando a conexão correta e já configurada do próprio NestJS
   try {
-    const adminExists = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { tipo: 'ADMIN' },
-          { role: 'ADMIN' }
-        ]
-      } as any
-    });
+    // Procuramos o PrismaService dinamicamente dentro dos módulos injetados
+    const prisma = app.get('PrismaService' as any) || app.get('PrismaClient' as any);
+    
+    if (prisma && prisma.user) {
+      const adminExists = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { tipo: 'ADMIN' },
+            { role: 'ADMIN' }
+          ]
+        } as any
+      });
 
-    if (!adminExists) {
-      await prisma.user.create({
-        data: {
-          id: 1,
-          email: 'admin@teste.com',
-          password: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C',
-          tipo: 'ADMIN',
-          planoUser: 'ADMIN',
-        } as any
-      });
-      console.log('USUÁRIO ADMIN CRIADO COM SUCESSO NO BANCO!');
+      if (!adminExists) {
+        await prisma.user.create({
+          data: {
+            id: 1,
+            email: 'admin@teste.com',
+            password: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C', // Senha '123456'
+            tipo: 'ADMIN',
+            planoUser: 'ADMIN',
+          } as any
+        });
+        console.log('USUÁRIO ADMIN CRIADO COM SUCESSO NO BANCO!');
+      }
     }
-  } catch (e) {
-    console.log('Tentando formato alternativo de campos...');
-    try {
-      await prisma.user.create({
-        data: {
-          id: 1,
-          email: 'admin@teste.com',
-          password: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C',
-          role: 'ADMIN',
-          plan: 'ADMIN',
-        } as any
-      });
-      console.log('USUÁRIO ADMIN CRIADO COM SUCESSO (CAMPOS EM INGLÊS)!');
-    } catch (err: any) { // CORRIGIDO: Adicionado o ': any' aqui para sumir o erro TS18046
-      console.log('Aviso: Não foi possível criar o admin automaticamente:', err.message);
-    }
+  } catch (e: any) {
+    console.log('Aviso: Pulando criação automática de admin:', e.message);
   }
 
   await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
