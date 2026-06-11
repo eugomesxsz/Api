@@ -5,7 +5,6 @@ import { PrismaClient } from '@prisma/client';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // CORRIGIDO: Agora está enableCors com "r"
   app.enableCors({
     origin: 'https://paineladm-navy.vercel.app',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -18,9 +17,8 @@ async function bootstrap() {
     if (!adminExists) {
       await prisma.user.create({
         data: {
-          id: 1, // CORRIGIDO: Agora é um número inteiro, sem aspas
+          id: 1,
           email: 'admin@teste.com',
-          nome: 'Admin',
           tipo: 'ADMIN',
           planoUser: 'ADMIN',
           senha: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C',
