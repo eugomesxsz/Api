@@ -5,26 +5,24 @@ import { PrismaClient } from '@prisma/client';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Ativa o CORS para o seu painel da Vercel
-  app.enableCros({
+  // CORRIGIDO: Agora está enableCors com "r"
+  app.enableCors({
     origin: 'https://paineladm-navy.vercel.app',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  // CÓDIGO MÁGICO: Cria o admin direto se ele não existir
   const prisma = new PrismaClient();
   try {
     const adminExists = await prisma.user.findFirst({ where: { tipo: 'ADMIN' } });
     if (!adminExists) {
       await prisma.user.create({
         data: {
-          id: 'admin-automatico-123',
+          id: 1, // CORRIGIDO: Agora é um número inteiro, sem aspas
           email: 'admin@teste.com',
           nome: 'Admin',
           tipo: 'ADMIN',
           planoUser: 'ADMIN',
-          // Esta é a senha '123456' já criptografada em Bcrypt para a API aceitar
           senha: '$2b$10$EPf9ZThsc9N6E35Lg7wEcuvF1I9Psh1q9zDGlqY1R.tClyZ.O4w2C',
         }
       });
